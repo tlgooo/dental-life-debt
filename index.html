@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>متابعة الديون – دنتال لايف</title>
-<style>
+<style> 
 * { margin:0; padding:0; box-sizing:border-box; }
 :root {
   --blue:#0057A8; --blue-dark:#003f7d; --blue-light:#e8f2ff; --accent:#00AEEF;
@@ -15,7 +15,7 @@
   --shadow:0 2px 12px rgba(0,87,168,0.10); --radius:14px;
 }
 body { font-family:'Segoe UI',Tahoma,Arial,sans-serif; background:var(--gray); color:var(--text); min-height:100vh; }
-
+ 
 header {
   background:linear-gradient(135deg,var(--blue-dark),var(--blue) 60%,var(--accent));
   color:white; padding:16px 20px;
@@ -28,12 +28,12 @@ header {
 .brand h1 { font-size:17px;font-weight:800; }
 .brand p { font-size:11px;opacity:0.85;margin-top:1px; }
 .add-btn-header { background:rgba(255,255,255,0.2);border:1.5px solid rgba(255,255,255,0.4);color:white;border-radius:10px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit; }
-
+ 
 .loading-screen { position:fixed;inset:0;background:white;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:14px; }
 .loading-screen .spinner { width:40px;height:40px;border:4px solid var(--blue-light);border-top-color:var(--blue);border-radius:50%;animation:spin 0.8s linear infinite; }
 @keyframes spin { to{transform:rotate(360deg)} }
 .loading-screen p { color:var(--muted);font-size:14px; }
-
+ 
 .stats { display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:16px; }
 .stat-card { background:white;border-radius:var(--radius);padding:14px 12px;text-align:center;box-shadow:var(--shadow); }
 .stat-card .num { font-size:20px;font-weight:800;margin-bottom:3px; }
@@ -41,21 +41,21 @@ header {
 .stat-card.red .num { color:var(--red); }
 .stat-card.green .num { color:var(--green); }
 .stat-card.blue .num { color:var(--blue); }
-
+ 
 .toolbar { padding:0 16px 12px;display:flex;gap:8px; }
 .search-box { flex:1;position:relative; }
 .search-box input { width:100%;border:1.5px solid var(--gray-mid);border-radius:10px;padding:10px 14px 10px 36px;font-size:13px;font-family:inherit;outline:none;background:white; }
 .search-box input:focus { border-color:var(--blue); }
 .search-icon { position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px; }
-
+ 
 .filter-tabs { display:flex;gap:6px;padding:0 16px 12px;overflow-x:auto;scrollbar-width:none; }
 .filter-tabs::-webkit-scrollbar { display:none; }
 .ftab { background:white;border:1.5px solid var(--gray-mid);border-radius:20px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;color:var(--muted);white-space:nowrap;font-family:inherit; }
 .ftab.active { background:var(--blue);border-color:var(--blue);color:white; }
-
+ 
 .section-lbl { padding:4px 16px 8px;font-size:14px;font-weight:700; }
 .clients-list { padding:0 16px 100px;display:flex;flex-direction:column;gap:10px; }
-
+ 
 .client-card { background:white;border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;cursor:pointer;transition:transform 0.15s; }
 .client-card:hover { transform:translateY(-1px); }
 .client-header { display:flex;align-items:center;gap:12px;padding:14px; }
@@ -76,10 +76,10 @@ header {
 .action-btn.pay { background:var(--green);color:white; }
 .action-btn.remind { background:var(--blue-light);color:var(--blue); }
 .action-btn.details { background:var(--gray-mid);color:var(--text); }
-
+ 
 .empty { text-align:center;padding:50px 20px;color:var(--muted); }
 .empty .emoji { font-size:48px;margin-bottom:10px; }
-
+ 
 .overlay { display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:200;backdrop-filter:blur(2px);align-items:flex-end; }
 .overlay.show { display:flex; }
 .panel { background:white;width:100%;border-radius:20px 20px 0 0;padding:20px;max-height:90vh;overflow-y:auto;animation:slideUp 0.3s ease; }
@@ -87,7 +87,7 @@ header {
 .panel-header { display:flex;justify-content:space-between;align-items:center;margin-bottom:18px; }
 .panel-header h3 { font-size:17px;font-weight:800; }
 .close-x { background:var(--gray);border:none;border-radius:50%;width:32px;height:32px;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center; }
-
+ 
 .form-group { margin-bottom:14px; }
 .form-group label { display:block;font-size:13px;font-weight:700;margin-bottom:6px; }
 .form-group input, .form-group select {
@@ -98,28 +98,28 @@ header {
 .form-row { display:grid;grid-template-columns:1fr 1fr;gap:10px; }
 .save-btn { width:100%;background:var(--blue);color:white;border:none;border-radius:12px;padding:14px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:4px; }
 .save-btn.green { background:var(--green); }
-
+ 
 .pay-history { margin-top:12px; }
 .pay-item { display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--gray-mid); }
 .pay-item:last-child { border-bottom:none; }
 .pay-amount { font-size:14px;font-weight:700;color:var(--green); }
 .pay-note { font-size:12px;color:var(--muted);margin-top:2px; }
-
+ 
 .toast { position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1a2b3c;color:white;padding:10px 20px;border-radius:20px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap; }
 .toast.show { opacity:1; }
-
+ 
 .sync-indicator { position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--green);color:white;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:700;z-index:998;opacity:0;transition:opacity 0.3s;pointer-events:none; }
 .sync-indicator.show { opacity:1; }
 </style>
 </head>
 <body>
-
+ 
 <div class="loading-screen" id="loadingScreen">
   <div style="font-size:36px">🦷</div>
   <div class="spinner"></div>
   <p>جاري الاتصال بقاعدة البيانات...</p>
 </div>
-
+ 
 <header>
   <div class="brand">
     <div class="brand-icon">🦷</div>
@@ -130,26 +130,26 @@ header {
   </div>
   <button class="add-btn-header" onclick="openAddClient()">+ عميل جديد</button>
 </header>
-
+ 
 <div class="stats" id="statsBar"></div>
-
+ 
 <div class="toolbar">
   <div class="search-box">
     <span class="search-icon">🔍</span>
     <input type="text" id="searchInput" placeholder="ابحث باسم الدكتور أو التليفون..." oninput="renderList()">
   </div>
 </div>
-
+ 
 <div class="filter-tabs">
   <button class="ftab active" onclick="setFilter('all',this)">الكل</button>
   <button class="ftab" onclick="setFilter('overdue',this)">متأخرون 🔴</button>
   <button class="ftab" onclick="setFilter('partial',this)">جزئي 🟡</button>
   <button class="ftab" onclick="setFilter('clear',this)">مسددون ✅</button>
 </div>
-
+ 
 <div class="section-lbl" id="listLabel">جميع العملاء</div>
 <div class="clients-list" id="clientsList"></div>
-
+ 
 <!-- ADD CLIENT -->
 <div class="overlay" id="addOverlay" onclick="closeOverlayOutside(event,'addOverlay')">
   <div class="panel">
@@ -170,7 +170,7 @@ header {
     <button class="save-btn" onclick="saveClient()">💾 حفظ العميل</button>
   </div>
 </div>
-
+ 
 <!-- PAY -->
 <div class="overlay" id="payOverlay" onclick="closeOverlayOutside(event,'payOverlay')">
   <div class="panel">
@@ -187,7 +187,7 @@ header {
     <button class="save-btn green" onclick="savePay()">✅ تأكيد الدفعة</button>
   </div>
 </div>
-
+ 
 <!-- DETAILS -->
 <div class="overlay" id="detailsOverlay" onclick="closeOverlayOutside(event,'detailsOverlay')">
   <div class="panel">
@@ -198,14 +198,15 @@ header {
     <div id="detailContent"></div>
   </div>
 </div>
-
+ 
 <div class="toast" id="toast"></div>
 <div class="sync-indicator" id="syncIndicator">☁️ تم الحفظ</div>
-
+ 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check.js";
 import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
+ 
 const firebaseConfig = {
   apiKey: "AIzaSyCONU1ZPraqkdQEcGbTXlqKqNpEdfiUsIQ",
   authDomain: "dental-life-3492d.firebaseapp.com",
@@ -215,40 +216,46 @@ const firebaseConfig = {
   messagingSenderId: "1044083013587",
   appId: "1:1044083013587:web:fe23e52cb3822754f4a126"
 };
-
+ 
 const app = initializeApp(firebaseConfig);
+ 
+// ✅ App Check - الحماية
+const appCheck = initializeAppCheck(app, {
+  provider: new ReCaptchaV3Provider('6Lc0yDwtAAAAAJgiYJlj-n4xP3MpKxZoJrtu7Eg-'),
+  isTokenAutoRefreshEnabled: true
+});
+ 
 const db = getFirestore(app);
 const colRef = collection(db, "clients");
-
+ 
 let clients = [];
 let currentFilter = 'all';
 let editingId = null;
 let payingId = null;
-
-// Real-time listener
+ 
 onSnapshot(colRef, (snapshot) => {
   clients = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
   document.getElementById('loadingScreen').style.display = 'none';
   renderStats();
   renderList();
 });
-
+ 
 function getStatus(c) {
   const rem = c.debt - c.paid;
   if (rem <= 0) return 'clear';
   if (c.paid > 0) return 'partial';
   return 'overdue';
 }
-
+ 
 function statusLabel(s) {
   return { overdue:'متأخر', partial:'جزئي', clear:'مسدد' }[s];
 }
-
+ 
 function avatarColor(name) {
   const colors = ['#0057A8','#7c3aed','#db2777','#059669','#d97706','#dc2626'];
   return colors[(name || 'أ').charCodeAt(0) % colors.length];
 }
-
+ 
 window.renderStats = function() {
   const totalDebt = clients.reduce((s,c) => s + Math.max(0, c.debt - c.paid), 0);
   const cleared = clients.filter(c => getStatus(c) === 'clear').length;
@@ -258,7 +265,7 @@ window.renderStats = function() {
     <div class="stat-card green"><div class="num">${cleared}</div><div class="lbl">مسددون</div></div>
   `;
 }
-
+ 
 window.renderList = function() {
   const q = document.getElementById('searchInput').value.trim().toLowerCase();
   let list = clients.filter(c => {
@@ -299,7 +306,7 @@ window.renderList = function() {
     </div>`;
   }).join('');
 }
-
+ 
 window.setFilter = function(f, btn) {
   currentFilter = f;
   document.querySelectorAll('.ftab').forEach(b => b.classList.remove('active'));
@@ -308,7 +315,7 @@ window.setFilter = function(f, btn) {
   document.getElementById('listLabel').textContent = labels[f];
   renderList();
 }
-
+ 
 window.openAddClient = function() {
   editingId = null;
   document.getElementById('addPanelTitle').textContent = '➕ إضافة عميل جديد';
@@ -316,7 +323,7 @@ window.openAddClient = function() {
   document.getElementById('f_date').value = new Date().toISOString().split('T')[0];
   document.getElementById('addOverlay').classList.add('show');
 }
-
+ 
 window.saveClient = async function() {
   const name = document.getElementById('f_name').value.trim();
   const phone = document.getElementById('f_phone').value.trim();
@@ -336,7 +343,7 @@ window.saveClient = async function() {
     showToast('✅ تم الحفظ بنجاح');
   } catch(e) { showToast('❌ خطأ في الحفظ'); }
 }
-
+ 
 window.openPay = function(id) {
   payingId = id;
   const c = clients.find(x => x.id === id);
@@ -345,7 +352,7 @@ window.openPay = function(id) {
   document.getElementById('p_note').value = '';
   document.getElementById('payOverlay').classList.add('show');
 }
-
+ 
 window.savePay = async function() {
   const amount = parseFloat(document.getElementById('p_amount').value) || 0;
   if (!amount) { showToast('⚠️ أدخل المبلغ'); return; }
@@ -361,7 +368,7 @@ window.savePay = async function() {
     showToast(`✅ تم تسجيل ${amount.toLocaleString()} جنيه`);
   } catch(e) { showToast('❌ خطأ في الحفظ'); }
 }
-
+ 
 window.openDetails = function(id) {
   const c = clients.find(x => x.id === id);
   const rem = Math.max(0, c.debt - c.paid);
@@ -399,7 +406,7 @@ window.openDetails = function(id) {
   `;
   document.getElementById('detailsOverlay').classList.add('show');
 }
-
+ 
 window.editClient = function(id) {
   closeOverlay('detailsOverlay');
   editingId = id;
@@ -413,7 +420,7 @@ window.editClient = function(id) {
   document.getElementById('f_note').value = c.note||'';
   document.getElementById('addOverlay').classList.add('show');
 }
-
+ 
 window.deleteClient = async function(id) {
   if (!confirm('هتحذف العميل ده؟')) return;
   try {
@@ -423,24 +430,24 @@ window.deleteClient = async function(id) {
     showToast('🗑️ تم الحذف');
   } catch(e) { showToast('❌ خطأ في الحذف'); }
 }
-
+ 
 window.sendReminder = function(id) {
   const c = clients.find(x => x.id === id);
   const rem = Math.max(0, c.debt - c.paid);
   const msg = `السلام عليكم دكتور ${c.name} 🦷\nنذكركم بالمبلغ المستحق لدنتال لايف: *${rem.toLocaleString()} جنيه*\nنرجو التواصل لترتيب السداد في أقرب وقت 🙏`;
   window.open(`https://wa.me/2${c.phone.replace(/^0/,'')}?text=${encodeURIComponent(msg)}`, '_blank');
 }
-
+ 
 window.closeOverlay = function(id) { document.getElementById(id).classList.remove('show'); }
 window.closeOverlayOutside = function(e, id) { if (e.target.id === id) closeOverlay(id); }
-
+ 
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
 }
-
+ 
 function showSync() {
   const s = document.getElementById('syncIndicator');
   s.classList.add('show');
@@ -449,3 +456,4 @@ function showSync() {
 </script>
 </body>
 </html>
+

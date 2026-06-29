@@ -18,7 +18,8 @@ body { font-family:'Segoe UI',Tahoma,Arial,sans-serif; background:var(--gray); c
  
 /* SETUP SCREEN */
 .setup-screen {
-  display:none; position:fixed; inset:0; background:linear-gradient(135deg,var(--blue-dark),var(--blue) 60%,var(--accent));
+  display:none; position:fixed; inset:0;
+  background:linear-gradient(135deg,var(--blue-dark),var(--blue) 60%,var(--accent));
   z-index:1000; align-items:center; justify-content:center; flex-direction:column; padding:24px;
 }
 .setup-screen.show { display:flex; }
@@ -28,18 +29,25 @@ body { font-family:'Segoe UI',Tahoma,Arial,sans-serif; background:var(--gray); c
 }
 .setup-box .logo { font-size:48px; text-align:center; margin-bottom:10px; }
 .setup-box h2 { font-size:20px; font-weight:800; text-align:center; margin-bottom:6px; color:var(--blue); }
-.setup-box p { font-size:13px; color:var(--muted); text-align:center; margin-bottom:24px; }
+.setup-box p { font-size:13px; color:var(--muted); text-align:center; margin-bottom:24px; line-height:1.6; }
 .setup-box label { display:block; font-size:13px; font-weight:700; margin-bottom:6px; }
 .setup-box input {
   width:100%; border:1.5px solid var(--gray-mid); border-radius:10px;
   padding:12px 14px; font-size:15px; font-family:inherit; color:var(--text);
-  outline:none; margin-bottom:16px;
+  outline:none; margin-bottom:16px; direction:ltr; text-align:center; letter-spacing:2px;
 }
+.setup-box input.name-input { direction:rtl; text-align:right; letter-spacing:0; }
 .setup-box input:focus { border-color:var(--blue); }
 .setup-btn {
   width:100%; background:var(--blue); color:white; border:none; border-radius:12px;
   padding:14px; font-size:15px; font-weight:800; cursor:pointer; font-family:inherit;
 }
+.setup-hint {
+  margin-top:14px; background:var(--blue-light); border-radius:10px; padding:12px;
+  font-size:12px; color:var(--blue); line-height:1.7; text-align:right;
+}
+.error-msg { background:var(--red-light); color:var(--red); border-radius:8px; padding:10px 12px; font-size:13px; font-weight:600; margin-bottom:12px; display:none; }
+.error-msg.show { display:block; }
  
 header {
   background:linear-gradient(135deg,var(--blue-dark),var(--blue) 60%,var(--accent));
@@ -136,28 +144,41 @@ header {
 .toast.show { opacity:1; }
 .sync-indicator { position:fixed;top:70px;left:50%;transform:translateX(-50%);background:var(--green);color:white;padding:6px 16px;border-radius:20px;font-size:12px;font-weight:700;z-index:998;opacity:0;transition:opacity 0.3s;pointer-events:none; }
 .sync-indicator.show { opacity:1; }
+ 
+/* Company code badge in header */
+.code-badge {
+  background:rgba(255,255,255,0.15); border:1px solid rgba(255,255,255,0.3);
+  border-radius:6px; padding:2px 8px; font-size:10px; font-weight:700;
+  letter-spacing:1px; opacity:0.9; margin-top:3px; display:inline-block;
+}
 </style>
 </head>
 <body>
  
-<!-- شاشة الإعداد -->
+<!-- شاشة إدخال كود الشركة -->
 <div class="setup-screen" id="setupScreen">
   <div class="setup-box">
     <div class="logo">🦷</div>
     <h2>أهلاً بك!</h2>
-    <p>اكتب اسم شركتك عشان الأداة تتعرف عليك</p>
-    <label>🏢 اسم الشركة *</label>
-    <input type="text" id="setup_name" placeholder="مثلاً: سما دنتال، النور للتوريدات..." maxlength="40">
-    <label>😊 إيموجي الشركة (اختياري)</label>
-    <input type="text" id="setup_emoji" placeholder="🦷 أو 💊 أو 🏥" maxlength="4">
-    <button class="setup-btn" onclick="saveSetup()">🚀 ابدأ الاستخدام</button>
+    <p>اكتب كود الشركة الخاص بك للوصول لبياناتك</p>
+    <div class="error-msg" id="errorMsg">❌ الكود غير صحيح، حاول مرة تانية</div>
+    <label>🔐 كود الشركة *</label>
+    <input type="text" id="setup_code" placeholder="مثلاً: SAMA2024" maxlength="20"
+      onkeyup="this.value=this.value.toUpperCase()" onkeypress="if(event.key==='Enter') saveSetup()">
+    <div class="setup-hint">
+      🔒 كل شركة بتشوف بياناتها بس<br>
+      📦 بياناتك محفوظة على السحابة<br>
+      💡 لو نسيت الكود تواصل مع الإدارة
+    </div>
+    <br>
+    <button class="setup-btn" onclick="saveSetup()">🚀 دخول</button>
   </div>
 </div>
  
 <div class="loading-screen" id="loadingScreen">
   <div style="font-size:36px" id="loadingEmoji">🦷</div>
   <div class="spinner"></div>
-  <p>جاري الاتصال بقاعدة البيانات...</p>
+  <p id="loadingMsg">جاري الاتصال بقاعدة البيانات...</p>
 </div>
  
 <header>
@@ -165,11 +186,11 @@ header {
     <div class="brand-icon" id="headerEmoji">🦷</div>
     <div>
       <h1 id="headerName">متابعة الديون</h1>
-      <p>متابعة الديون والمدفوعات</p>
+      <div class="code-badge" id="headerCode"></div>
     </div>
   </div>
   <div class="header-btns">
-    <button class="reset-btn" onclick="resetSetup()" title="تغيير اسم الشركة">⚙️</button>
+    <button class="reset-btn" onclick="logout()" title="تسجيل الخروج">🚪</button>
     <button class="add-btn-header" onclick="openAddClient()">+ عميل جديد</button>
   </div>
 </header>
@@ -245,7 +266,7 @@ header {
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check.js";
-import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDocs, query, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
  
 const firebaseConfig = {
   apiKey: "AIzaSyCONU1ZPraqkdQEcGbTXlqKqNpEdfiUsIQ",
@@ -254,7 +275,7 @@ const firebaseConfig = {
   projectId: "dental-life-3492d",
   storageBucket: "dental-life-3492d.firebasestorage.app",
   messagingSenderId: "1044083013587",
-  appId: "1:1044083013587:web:fe23e52cb3822754f4a126"
+  appId: "1:1044083013787:web:fe23e52cb3822754f4a126"
 };
  
 const app = initializeApp(firebaseConfig);
@@ -264,59 +285,114 @@ initializeAppCheck(app, {
 });
  
 const db = getFirestore(app);
-const colRef = collection(db, "clients");
+ 
+// ===== COMPANY CODES =====
+// كل كود بيتحول لـ collection منفصلة في Firebase
+// المدير بيضيف الأكواد دي من Firebase console
+const VALID_CODES = {
+  'SAMA2024':   { name: 'سما دنتال',         emoji: '🦷' },
+  'ALNOUR2024': { name: 'النور للتوريدات',    emoji: '💊' },
+  'ADMIN2024':  { name: 'لوحة الإدارة',       emoji: '⚙️' },
+  // أضف شركات جديدة هنا
+};
  
 let clients = [];
 let currentFilter = 'all';
 let editingId = null;
 let payingId = null;
+let colRef = null;
+let unsubscribe = null;
+let currentCode = null;
  
-// ===== SETUP =====
-function getCompanyName() { return localStorage.getItem('company_name') || ''; }
-function getCompanyEmoji() { return localStorage.getItem('company_emoji') || '🦷'; }
+// ===== AUTH =====
+function getSavedCode() { return sessionStorage.getItem('company_code') || ''; }
  
-function applyBranding() {
-  const name = getCompanyName();
-  const emoji = getCompanyEmoji();
-  document.getElementById('headerName').textContent = name || 'متابعة الديون';
-  document.getElementById('headerEmoji').textContent = emoji;
-  document.getElementById('loadingEmoji').textContent = emoji;
-  document.title = name ? `${name} - متابعة الديون` : 'متابعة الديون';
+function getCompanyInfo(code) {
+  return VALID_CODES[code] || null;
 }
  
 window.saveSetup = function() {
-  const name = document.getElementById('setup_name').value.trim();
-  const emoji = document.getElementById('setup_emoji').value.trim() || '🦷';
-  if (!name) { alert('من فضلك اكتب اسم الشركة'); return; }
-  localStorage.setItem('company_name', name);
-  localStorage.setItem('company_emoji', emoji);
+  const code = document.getElementById('setup_code').value.trim().toUpperCase();
+  if (!code) { showError('من فضلك اكتب كود الشركة'); return; }
+ 
+  const info = getCompanyInfo(code);
+  if (!info) {
+    showError('❌ الكود غير صحيح، تواصل مع الإدارة');
+    document.getElementById('setup_code').value = '';
+    document.getElementById('setup_code').focus();
+    return;
+  }
+ 
+  sessionStorage.setItem('company_code', code);
+  document.getElementById('errorMsg').classList.remove('show');
   document.getElementById('setupScreen').classList.remove('show');
-  applyBranding();
-  showToast(`✅ أهلاً بـ ${name}!`);
+  initApp(code, info);
 }
  
-window.resetSetup = function() {
-  if (!confirm('هتغير اسم الشركة؟')) return;
-  document.getElementById('setup_name').value = getCompanyName();
-  document.getElementById('setup_emoji').value = getCompanyEmoji();
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+ 
+window.logout = function() {
+  if (!confirm('هتخرج من حساب الشركة؟')) return;
+  if (unsubscribe) unsubscribe();
+  sessionStorage.removeItem('company_code');
+  clients = [];
+  currentCode = null;
+  colRef = null;
+  document.getElementById('setup_code').value = '';
+  document.getElementById('errorMsg').classList.remove('show');
   document.getElementById('setupScreen').classList.add('show');
 }
  
-// أول تشغيل
-if (!getCompanyName()) {
-  document.getElementById('setupScreen').classList.add('show');
+// ===== INIT =====
+function initApp(code, info) {
+  currentCode = code;
+ 
+  // كل شركة ليها collection خاصة بيها
+  colRef = collection(db, `companies/${code}/clients`);
+ 
+  applyBranding(info);
+  startListening();
+}
+ 
+function applyBranding(info) {
+  document.getElementById('headerName').textContent = info.name;
+  document.getElementById('headerEmoji').textContent = info.emoji;
+  document.getElementById('loadingEmoji').textContent = info.emoji;
+  document.getElementById('headerCode').textContent = currentCode;
+  document.title = `${info.name} - متابعة الديون`;
+}
+ 
+function startListening() {
+  document.getElementById('loadingScreen').style.display = 'flex';
+  document.getElementById('loadingMsg').textContent = 'جاري تحميل البيانات...';
+ 
+  if (unsubscribe) unsubscribe();
+ 
+  unsubscribe = onSnapshot(colRef, (snapshot) => {
+    clients = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    document.getElementById('loadingScreen').style.display = 'none';
+    renderStats();
+    renderList();
+  }, (err) => {
+    document.getElementById('loadingScreen').style.display = 'none';
+    showToast('❌ خطأ في الاتصال');
+  });
+}
+ 
+// ===== أول تشغيل =====
+const savedCode = getSavedCode();
+if (savedCode && getCompanyInfo(savedCode)) {
+  initApp(savedCode, getCompanyInfo(savedCode));
 } else {
-  applyBranding();
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('setupScreen').classList.add('show');
 }
  
-// ===== FIREBASE =====
-onSnapshot(colRef, (snapshot) => {
-  clients = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-  document.getElementById('loadingScreen').style.display = 'none';
-  renderStats();
-  renderList();
-});
- 
+// ===== HELPERS =====
 function getStatus(c) {
   const rem = c.debt - c.paid;
   if (rem <= 0) return 'clear';
@@ -329,6 +405,7 @@ function avatarColor(name) {
   return colors[(name || 'أ').charCodeAt(0) % colors.length];
 }
  
+// ===== RENDER =====
 window.renderStats = function() {
   const totalDebt = clients.reduce((s,c) => s + Math.max(0, c.debt - c.paid), 0);
   const cleared = clients.filter(c => getStatus(c) === 'clear').length;
@@ -389,7 +466,9 @@ window.setFilter = function(f, btn) {
   renderList();
 }
  
+// ===== CRUD =====
 window.openAddClient = function() {
+  if (!colRef) { showToast('⚠️ سجّل دخول أولاً'); return; }
   editingId = null;
   document.getElementById('addPanelTitle').textContent = '➕ إضافة عميل جديد';
   ['f_name','f_phone','f_debt','f_paid','f_note'].forEach(id => document.getElementById(id).value = '');
@@ -407,12 +486,12 @@ window.saveClient = async function() {
   if (!name || !phone || !debt) { showToast('⚠️ أدخل الاسم والتليفون والدين'); return; }
   try {
     if (editingId) {
-      await updateDoc(doc(db, 'clients', editingId), {name, phone, debt, paid, date, note});
+      await updateDoc(doc(db, `companies/${currentCode}/clients`, editingId), {name, phone, debt, paid, date, note});
     } else {
       await addDoc(colRef, {name, phone, debt, paid, date, note, payments:[]});
     }
     showSync(); closeOverlay('addOverlay'); showToast('✅ تم الحفظ بنجاح');
-  } catch(e) { showToast('❌ خطأ في الحفظ'); }
+  } catch(e) { showToast('❌ خطأ في الحفظ'); console.error(e); }
 }
  
 window.openPay = function(id) {
@@ -433,7 +512,7 @@ window.savePay = async function() {
   const newPaid = Math.min(c.debt, c.paid + amount);
   const payments = [...(c.payments||[]), { amount, method, note, date: new Date().toLocaleDateString('ar-EG') }];
   try {
-    await updateDoc(doc(db, 'clients', payingId), { paid: newPaid, payments });
+    await updateDoc(doc(db, `companies/${currentCode}/clients`, payingId), { paid: newPaid, payments });
     showSync(); closeOverlay('payOverlay'); showToast(`✅ تم تسجيل ${amount.toLocaleString()} جنيه`);
   } catch(e) { showToast('❌ خطأ في الحفظ'); }
 }
@@ -493,7 +572,7 @@ window.editClient = function(id) {
 window.deleteClient = async function(id) {
   if (!confirm('هتحذف العميل ده؟')) return;
   try {
-    await deleteDoc(doc(db, 'clients', id));
+    await deleteDoc(doc(db, `companies/${currentCode}/clients`, id));
     showSync(); closeOverlay('detailsOverlay'); showToast('🗑️ تم الحذف');
   } catch(e) { showToast('❌ خطأ في الحذف'); }
 }
@@ -501,7 +580,8 @@ window.deleteClient = async function(id) {
 window.sendReminder = function(id) {
   const c = clients.find(x => x.id === id);
   const rem = Math.max(0, c.debt - c.paid);
-  const companyName = getCompanyName() || 'شركتنا';
+  const info = getCompanyInfo(currentCode);
+  const companyName = info ? info.name : 'شركتنا';
   const msg = `السلام عليكم دكتور ${c.name} 🦷\nنذكركم بالمبلغ المستحق لـ ${companyName}: *${rem.toLocaleString()} جنيه*\nنرجو التواصل لترتيب السداد في أقرب وقت 🙏`;
   window.open(`https://wa.me/2${c.phone.replace(/^0/,'')}?text=${encodeURIComponent(msg)}`, '_blank');
 }

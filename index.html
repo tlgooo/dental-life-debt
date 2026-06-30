@@ -69,13 +69,34 @@ header {
 @keyframes spin { to{transform:rotate(360deg)} }
 .loading-screen p { color:var(--muted);font-size:14px; }
  
-.stats { display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:16px; }
-.stat-card { background:white;border-radius:var(--radius);padding:14px 12px;text-align:center;box-shadow:var(--shadow); }
-.stat-card .num { font-size:20px;font-weight:800;margin-bottom:3px; }
+.stats { display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:16px 16px 8px; }
+.stat-card { background:white;border-radius:var(--radius);padding:16px 14px;box-shadow:var(--shadow);position:relative;overflow:hidden; }
+.stat-card .icon { font-size:18px;margin-bottom:6px;opacity:0.85; }
+.stat-card .num { font-size:22px;font-weight:800;margin-bottom:2px; }
 .stat-card .lbl { font-size:11px;color:var(--muted);font-weight:600; }
 .stat-card.red .num { color:var(--red); }
 .stat-card.green .num { color:var(--green); }
 .stat-card.blue .num { color:var(--blue); }
+.stat-card.yellow .num { color:var(--yellow); }
+.stat-wide { grid-column:1 / -1; background:linear-gradient(135deg,var(--blue-dark),var(--blue)); color:white; border-radius:var(--radius); padding:16px; box-shadow:var(--shadow); }
+.stat-wide-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+.stat-wide-top .num { font-size:26px; font-weight:800; }
+.stat-wide-top .lbl { font-size:12px; opacity:0.85; margin-top:2px; }
+.progress-bar { background:rgba(255,255,255,0.25); border-radius:20px; height:8px; overflow:hidden; }
+.progress-fill { background:white; height:100%; border-radius:20px; transition:width 0.4s ease; }
+.progress-pct { font-size:11px; opacity:0.9; margin-top:6px; text-align:left; }
+ 
+/* URGENT REMINDERS BANNER */
+.urgent-banner { margin:0 16px 12px; background:linear-gradient(135deg,#fff7ed,#fffbeb); border:1.5px solid var(--yellow); border-radius:var(--radius); padding:12px 14px; display:none; }
+.urgent-banner.show { display:block; }
+.urgent-banner-head { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:800; color:#92400e; margin-bottom:8px; }
+.urgent-list { display:flex; flex-direction:column; gap:6px; }
+.urgent-item { display:flex; justify-content:space-between; align-items:center; background:white; border-radius:8px; padding:8px 10px; font-size:12px; }
+.urgent-item .uname { font-weight:700; color:var(--text); }
+.urgent-item .udays { color:var(--yellow); font-weight:700; font-size:11px; }
+.due-badge { font-size:10px; font-weight:700; padding:2px 8px; border-radius:10px; margin-right:4px; }
+.due-badge.soon { background:var(--yellow-light); color:var(--yellow); }
+.due-badge.late { background:var(--red-light); color:var(--red); }
  
 .toolbar { padding:0 16px 12px;display:flex;gap:8px; }
 .search-box { flex:1;position:relative; }
@@ -196,6 +217,10 @@ header {
 </header>
  
 <div class="stats" id="statsBar"></div>
+<div class="urgent-banner" id="urgentBanner">
+  <div class="urgent-banner-head">⏰ مواعيد استحقاق قريبة</div>
+  <div class="urgent-list" id="urgentList"></div>
+</div>
 <div class="toolbar">
   <div class="search-box">
     <span class="search-icon">🔍</span>
@@ -226,7 +251,10 @@ header {
       <div class="form-group"><label>💰 إجمالي الدين *</label><input type="number" id="f_debt" placeholder="0"></div>
       <div class="form-group"><label>✅ المدفوع</label><input type="number" id="f_paid" placeholder="0"></div>
     </div>
-    <div class="form-group"><label>📅 تاريخ الدين</label><input type="date" id="f_date"></div>
+    <div class="form-row">
+      <div class="form-group"><label>📅 تاريخ الدين</label><input type="date" id="f_date"></div>
+      <div class="form-group"><label>⏰ تاريخ الاستحقاق</label><input type="date" id="f_duedate"></div>
+    </div>
     <div class="form-group"><label>📝 ملاحظة</label><input type="text" id="f_note" placeholder="مثلاً: فاتورة يناير"></div>
     <button class="save-btn" onclick="saveClient()">💾 حفظ العميل</button>
   </div>
@@ -415,13 +443,53 @@ function avatarColor(name) {
  
 // ===== RENDER =====
 window.renderStats = function() {
-  const totalDebt = clients.reduce((s,c) => s + Math.max(0, c.debt - c.paid), 0);
-  const cleared = clients.filter(c => getStatus(c) === 'clear').length;
+  const totalDebt = clients.reduce((s,c) => s + (c.debt||0), 0);
+  const totalPaid = clients.reduce((s,c) => s + (c.paid||0), 0);
+  const totalRemaining = clients.reduce((s,c) => s + Math.max(0, (c.debt||0) - (c.paid||0)), 0);
+  const overdueClients = clients.filter(c => getStatus(c) === 'overdue');
+  const overdueAmount = overdueClients.reduce((s,c) => s + Math.max(0, (c.debt||0) - (c.paid||0)), 0);
+  const collectionRate = totalDebt > 0 ? Math.round((totalPaid / totalDebt) * 100) : 0;
+ 
   document.getElementById('statsBar').innerHTML = `
-    <div class="stat-card red"><div class="num">${totalDebt.toLocaleString()}</div><div class="lbl">الديون (جنيه)</div></div>
-    <div class="stat-card blue"><div class="num">${clients.length}</div><div class="lbl">إجمالي العملاء</div></div>
-    <div class="stat-card green"><div class="num">${cleared}</div><div class="lbl">مسددون</div></div>
+    <div class="stat-wide">
+      <div class="stat-wide-top">
+        <div><div class="num">${totalRemaining.toLocaleString()} ج</div><div class="lbl">إجمالي المتبقي على ${clients.length} عميل</div></div>
+        <div style="text-align:left"><div class="num">${collectionRate}%</div><div class="lbl">نسبة التحصيل</div></div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${collectionRate}%"></div></div>
+    </div>
+    <div class="stat-card red"><div class="icon">🔴</div><div class="num">${overdueAmount.toLocaleString()}</div><div class="lbl">متأخر (${overdueClients.length} عميل)</div></div>
+    <div class="stat-card green"><div class="icon">✅</div><div class="num">${totalPaid.toLocaleString()}</div><div class="lbl">إجمالي المُحصّل</div></div>
   `;
+ 
+  renderUrgentReminders();
+}
+ 
+function daysUntil(dateStr) {
+  if (!dateStr) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const due = new Date(dateStr); due.setHours(0,0,0,0);
+  return Math.round((due - today) / 86400000);
+}
+ 
+function renderUrgentReminders() {
+  const upcoming = clients
+    .filter(c => Math.max(0,(c.debt||0)-(c.paid||0)) > 0 && c.dueDate)
+    .map(c => ({ c, days: daysUntil(c.dueDate) }))
+    .filter(x => x.days !== null && x.days <= 7)
+    .sort((a,b) => a.days - b.days);
+ 
+  const banner = document.getElementById('urgentBanner');
+  if (upcoming.length === 0) { banner.classList.remove('show'); return; }
+  banner.classList.add('show');
+  document.getElementById('urgentList').innerHTML = upcoming.slice(0,5).map(({c, days}) => {
+    const isLate = days < 0;
+    const label = isLate ? `متأخر ${Math.abs(days)} يوم` : days === 0 ? 'مستحق اليوم' : `بعد ${days} يوم`;
+    return `<div class="urgent-item" onclick="openDetails('${c.id}')">
+      <span class="uname">${c.name}</span>
+      <span class="due-badge ${isLate ? 'late' : 'soon'}">${label}</span>
+    </div>`;
+  }).join('');
 }
  
 window.renderList = function() {
@@ -439,6 +507,12 @@ window.renderList = function() {
   container.innerHTML = list.map(c => {
     const rem = Math.max(0, c.debt - c.paid);
     const st = getStatus(c);
+    const days = daysUntil(c.dueDate);
+    let dueBadge = '';
+    if (rem > 0 && days !== null) {
+      if (days < 0) dueBadge = `<span class="due-badge late">متأخر ${Math.abs(days)} يوم</span>`;
+      else if (days <= 7) dueBadge = `<span class="due-badge soon">${days===0?'مستحق اليوم':'باقي '+days+' يوم'}</span>`;
+    }
     return `
     <div class="client-card">
       <div class="client-header">
@@ -448,6 +522,7 @@ window.renderList = function() {
           <div class="client-phone">📞 ${c.phone}</div>
           <div class="client-meta">
             <span class="status-badge ${st}">${statusLabel(st)}</span>
+            ${dueBadge}
             ${c.note ? `<span style="font-size:11px;color:var(--muted)">· ${c.note}</span>` : ''}
           </div>
         </div>
@@ -481,6 +556,8 @@ window.openAddClient = function() {
   document.getElementById('addPanelTitle').textContent = '➕ إضافة عميل جديد';
   ['f_name','f_phone','f_debt','f_paid','f_note'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('f_date').value = new Date().toISOString().split('T')[0];
+  const defaultDue = new Date(); defaultDue.setDate(defaultDue.getDate() + 30);
+  document.getElementById('f_duedate').value = defaultDue.toISOString().split('T')[0];
   document.getElementById('addOverlay').classList.add('show');
 }
  
@@ -490,13 +567,14 @@ window.saveClient = async function() {
   const debt = parseFloat(document.getElementById('f_debt').value) || 0;
   const paid = parseFloat(document.getElementById('f_paid').value) || 0;
   const date = document.getElementById('f_date').value;
+  const dueDate = document.getElementById('f_duedate').value;
   const note = document.getElementById('f_note').value.trim();
   if (!name || !phone || !debt) { showToast('⚠️ أدخل الاسم والتليفون والدين'); return; }
   try {
     if (editingId) {
-      await updateDoc(doc(db, `companies/${currentCode}/clients`, editingId), {name, phone, debt, paid, date, note});
+      await updateDoc(doc(db, `companies/${currentCode}/clients`, editingId), {name, phone, debt, paid, date, dueDate, note});
     } else {
-      await addDoc(colRef, {name, phone, debt, paid, date, note, payments:[]});
+      await addDoc(colRef, {name, phone, debt, paid, date, dueDate, note, payments:[]});
     }
     showSync(); closeOverlay('addOverlay'); showToast('✅ تم الحفظ بنجاح');
   } catch(e) { showToast('❌ خطأ في الحفظ'); console.error(e); }
@@ -545,7 +623,7 @@ window.openDetails = function(id) {
       <div style="font-size:22px;font-weight:800;color:var(--blue)">${rem.toLocaleString()} جنيه</div>
       <div style="font-size:12px;color:var(--muted)">المتبقي</div>
     </div>
-    <div style="margin-bottom:12px;font-size:13px;color:var(--muted)">📅 ${c.date||'—'} · 📝 ${c.note||'—'}</div>
+    <div style="margin-bottom:12px;font-size:13px;color:var(--muted)">📅 ${c.date||'—'} · ⏰ استحقاق: ${c.dueDate||'—'} · 📝 ${c.note||'—'}</div>
     <div style="display:flex;gap:8px;margin-bottom:16px;">
       <button onclick="editClient('${c.id}')" style="flex:1;background:var(--blue-light);color:var(--blue);border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">✏️ تعديل</button>
       <button onclick="deleteClient('${c.id}')" style="flex:1;background:var(--red-light);color:var(--red);border:none;border-radius:8px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">🗑️ حذف</button>
@@ -573,6 +651,7 @@ window.editClient = function(id) {
   document.getElementById('f_debt').value = c.debt;
   document.getElementById('f_paid').value = c.paid;
   document.getElementById('f_date').value = c.date||'';
+  document.getElementById('f_duedate').value = c.dueDate||'';
   document.getElementById('f_note').value = c.note||'';
   document.getElementById('addOverlay').classList.add('show');
 }

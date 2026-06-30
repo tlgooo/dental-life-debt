@@ -192,7 +192,7 @@ header {
       💡 لو نسيت الكود تواصل مع الإدارة
     </div>
     <br>
-    <button class="setup-btn" onclick="saveSetup()">🚀 دخول</button>
+    <button class="setup-btn" id="setupBtn" onclick="saveSetup()">🚀 دخول</button>
   </div>
 </div>
  
@@ -295,6 +295,7 @@ header {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app-check.js";
 import { getFirestore, collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc, getDocs, query, limit } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
  
 const firebaseConfig = {
   apiKey: "AIzaSyCONU1ZPraqkdQEcGbTXlqKqNpEdfiUsIQ",
@@ -313,6 +314,7 @@ initializeAppCheck(app, {
 });
  
 const db = getFirestore(app);
+const auth = getAuth(app);
  
 // ===== COMPANY CODES =====
 // كل كود بيتحول لـ collection منفصلة في Firebase
@@ -347,7 +349,7 @@ function getCompanyInfo(code) {
   return VALID_CODES[code] || null;
 }
  
-window.saveSetup = function() {
+window.saveSetup = async function() {
   const code = document.getElementById('setup_code').value.trim().toUpperCase();
   if (!code) { showError('من فضلك اكتب كود الشركة'); return; }
  
@@ -359,10 +361,22 @@ window.saveSetup = function() {
     return;
   }
  
-  sessionStorage.setItem('company_code', code);
-  document.getElementById('errorMsg').classList.remove('show');
-  document.getElementById('setupScreen').classList.remove('show');
-  initApp(code, info);
+  const btn = document.getElementById('setupBtn');
+  btn.disabled = true; btn.textContent = '⏳ جاري التحقق...';
+  const email = code.toLowerCase() + '@dentcollect.app';
+  try {
+    await signInWithEmailAndPassword(auth, email, code);
+    sessionStorage.setItem('company_code', code);
+    document.getElementById('errorMsg').classList.remove('show');
+    document.getElementById('setupScreen').classList.remove('show');
+    initApp(code, info);
+  } catch (e) {
+    showError('❌ الكود غير صحيح، تواصل مع الإدارة');
+    document.getElementById('setup_code').value = '';
+    document.getElementById('setup_code').focus();
+  } finally {
+    btn.disabled = false; btn.textContent = '🚀 دخول';
+  }
 }
  
 function showError(msg) {
@@ -374,6 +388,7 @@ function showError(msg) {
 window.logout = function() {
   if (!confirm('هتخرج من حساب الشركة؟')) return;
   if (unsubscribe) unsubscribe();
+  signOut(auth);
   sessionStorage.removeItem('company_code');
   clients = [];
   currentCode = null;
@@ -420,13 +435,20 @@ function startListening() {
 }
  
 // ===== أول تشغيل =====
-const savedCode = getSavedCode();
-if (savedCode && getCompanyInfo(savedCode)) {
-  initApp(savedCode, getCompanyInfo(savedCode));
-} else {
+onAuthStateChanged(auth, (user) => {
+  if (user && user.email) {
+    const code = user.email.split('@')[0].toUpperCase();
+    const info = getCompanyInfo(code);
+    if (info) {
+      sessionStorage.setItem('company_code', code);
+      document.getElementById('setupScreen').classList.remove('show');
+      initApp(code, info);
+      return;
+    }
+  }
   document.getElementById('loadingScreen').style.display = 'none';
   document.getElementById('setupScreen').classList.add('show');
-}
+});
  
 // ===== HELPERS =====
 function getStatus(c) {
